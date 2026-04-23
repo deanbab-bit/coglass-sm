@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Coglass Glass Calculator",
+  "app_info": {
+    "name": "Coglass Glass Calculator",
+    "version": "1.0.0",
+    "categories": ["Materials & Equipment"]
+  },
+  "actions": [
+    {
+      "id": "coglass_job_tab",
+      "name": "Coglass",
+      "type": "client.job.description_tab",
+      "iframe_url": "https://sm-test.coglass.app/addon"
+    }
+  ]
+}
