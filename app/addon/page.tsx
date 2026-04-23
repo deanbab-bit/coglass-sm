@@ -52,9 +52,7 @@ function ProductCalculator({
   const weightPerM2 = 2.5 * (parseFloat(product.thickness ?? "4") || 4);
 
   let unitQty = 1;
-  let unitLabel = "";
-  if (product.unit === "m2") { unitQty = area; unitLabel = `${area.toFixed(3)} m²`; }
-  else if (product.unit === "pane") { unitQty = 1; unitLabel = "1 pane"; }
+  if (product.unit === "m2") { unitQty = area; }
   const total = product.sell_price * unitQty * qty;
   const canAdd = product.unit !== "m2" || (Number(width) > 0 && Number(height) > 0);
 

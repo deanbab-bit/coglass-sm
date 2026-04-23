@@ -590,7 +590,7 @@ function DeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
-        <p className="text-gray-800 font-medium mb-1">Delete "{label}"?</p>
+        <p className="text-gray-800 font-medium mb-1">Delete &quot;{label}&quot;?</p>
         <p className="text-sm text-gray-500 mb-5">This cannot be undone.</p>
         <div className="flex gap-3">
           <button
