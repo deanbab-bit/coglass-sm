@@ -10,8 +10,11 @@ export async function GET(req: Request) {
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
+  console.log("OAuth callback — params:", Object.fromEntries(url.searchParams));
+
   if (error || !code) {
-    return NextResponse.redirect(`${base}/addon?error=auth_failed`);
+    console.error("OAuth callback failed — error:", error, "code present:", !!code);
+    return NextResponse.redirect(`${base}/addon?error=auth_failed&detail=${encodeURIComponent(error ?? "no_code")}`);
   }
 
   try {
