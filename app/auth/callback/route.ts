@@ -5,12 +5,13 @@ import { ensureSchema, upsertTenant, seedTenantDefaults } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
   if (error || !code) {
-    return NextResponse.redirect(new URL("/addon?error=auth_failed", req.url));
+    return NextResponse.redirect(`${base}/addon?error=auth_failed`);
   }
 
   try {
@@ -41,12 +42,9 @@ export async function GET(req: Request) {
     // Sign a session token and redirect to the add-on UI
     const sessionToken = signSessionToken(tenant.id, company.uuid);
 
-    const redirectUrl = new URL("/addon", req.url);
-    redirectUrl.searchParams.set("session", sessionToken);
-
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(`${base}/addon?session=${sessionToken}`);
   } catch (err) {
     console.error("OAuth callback error:", err);
-    return NextResponse.redirect(new URL("/addon?error=server_error", req.url));
+    return NextResponse.redirect(`${base}/addon?error=server_error`);
   }
 }

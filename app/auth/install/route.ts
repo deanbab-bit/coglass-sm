@@ -8,6 +8,6 @@ export const runtime = "nodejs";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const state = url.searchParams.get("state") ?? undefined;
-  const authUrl = buildAuthUrl(state ?? undefined);
+  const authUrl = buildAuthUrl(state);
   return NextResponse.redirect(authUrl);
 }
