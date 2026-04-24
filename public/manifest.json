@@ -1,5 +1,7 @@
 {
   "manifest_version": 2,
+  "version": "1.0.0",
+  "type": "online",
   "name": "Coglass Glass Calculator",
   "app_info": {
     "name": "Coglass Glass Calculator",
