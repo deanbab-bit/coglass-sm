@@ -673,12 +673,12 @@ export default function SetupPage() {
   const [catModal, setCatModal] = useState<{ open: boolean; item: Category | null }>({ open: false, item: null });
   const [deleteModal, setDeleteModal] = useState<{ label: string; onConfirm: () => Promise<void> } | null>(null);
 
-  // Session token — comes from URL ?session=... or sessionStorage
+  // Session token — comes from URL ?session=... or localStorage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const sess = params.get("session") ?? sessionStorage.getItem("sm_session");
+    const sess = params.get("session") ?? localStorage.getItem("sm_session");
     if (sess) {
-      sessionStorage.setItem("sm_session", sess);
+      localStorage.setItem("sm_session", sess);
       setToken(sess);
     }
   }, []);

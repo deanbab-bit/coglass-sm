@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "online",
   "name": "Coglass Glass Calculator",
   "app_info": {
     "name": "Coglass Glass Calculator",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "categories": ["Materials & Equipment"]
   },
   "capabilities": {
@@ -13,7 +13,9 @@
       {
         "name": "Coglass",
         "url": "https://sm-test.coglass.app/addon",
-        "icon": "https://sm-test.coglass.app/icon.png"
+        "icon": "https://sm-test.coglass.app/icon.png",
+        "width": 800,
+        "height": 900
       }
     ]
   },
@@ -25,7 +27,8 @@
       "iconURL": "https://sm-test.coglass.app/icon.png",
       "actionURL": "https://sm-test.coglass.app/addon",
       "location": "modal",
-      "size": "large"
+      "width": 800,
+      "height": 900
     }
   ]
 }
