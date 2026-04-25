@@ -22,6 +22,7 @@ export function buildAuthUrl(state?: string): string {
     response_type: "code",
     client_id: getSmClientId(),
     redirect_uri: getRedirectUri(),
+    scope: "read_companyconfig manage_jobmaterial",
     ...(state ? { state } : {}),
   });
   return `${SM_AUTH_URL}?${params}`;
