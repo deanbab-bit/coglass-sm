@@ -10,10 +10,11 @@
   },
   "actions": [
     {
-      "id": "coglass_job_tab",
       "name": "Coglass",
-      "type": "client.job.description_tab",
-      "iframe_url": "https://sm-test.coglass.app/addon"
+      "type": "online",
+      "entity": "job",
+      "iframe_url": "https://sm-test.coglass.app/addon",
+      "location": "modal"
     }
   ]
 }
