@@ -898,8 +898,8 @@ export default function AddonPage() {
     const sess = p.get("session");
     const job = p.get("job_uuid") ?? p.get("jobUuid");
     if (p.get("error")) setAuthError("Authentication failed — please reinstall the add-on.");
-    if (sess) { setSessionToken(sess); sessionStorage.setItem("sm_session", sess); }
-    else { const s = sessionStorage.getItem("sm_session"); if (s) setSessionToken(s); }
+    if (sess) { setSessionToken(sess); localStorage.setItem("sm_session", sess); }
+    else { const s = localStorage.getItem("sm_session"); if (s) setSessionToken(s); else setAuthError("Session expired — please reinstall the add-on."); }
     if (job) {
       setJobUuid(job);
       // Load saved workbench from localStorage
@@ -918,7 +918,7 @@ export default function AddonPage() {
 
   // Load data
   React.useEffect(() => {
-    if (!sessionToken) return;
+    if (!sessionToken) { setLoading(false); return; }
     const h = { Authorization: `Bearer ${sessionToken}` };
     Promise.all([
       fetch("/api/sm/products", { headers: h }).then(r => r.json()),
@@ -980,7 +980,17 @@ export default function AddonPage() {
 
   if (authError) return (
     <div className="flex h-screen items-center justify-center p-6 text-center">
-      <div><div className="text-2xl mb-2">⚠️</div><div className="text-sm text-gray-600">{authError}</div></div>
+      <div>
+        <div className="text-2xl mb-2">⚠️</div>
+        <div className="text-sm text-gray-600 mb-4">{authError}</div>
+        <a
+          href="https://sm-test.coglass.app/auth/install"
+          className="inline-block px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
+          style={{ background: TEAL }}
+        >
+          Connect Coglass
+        </a>
+      </div>
     </div>
   );
 
