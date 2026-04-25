@@ -637,7 +637,7 @@ function WorkbenchRows({ rows, onQty, onDelete, onMoveUp, onMoveDown, onNoteChan
   onNoteChange: (id: string, note: string) => void;
 }) {
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
-  const toggle = (id: string) => setExpanded(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggle = (id: string) => setExpanded(s => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   return (
     <div className="rounded-xl border bg-white overflow-hidden">
@@ -668,7 +668,7 @@ function WorkbenchRows({ rows, onQty, onDelete, onMoveUp, onMoveDown, onNoteChan
                   {r.rowType === "custom" && <span className="text-xs px-1.5 py-0.5 rounded font-bold bg-gray-100 text-gray-400">custom</span>}
                 </div>
                 {r.description && <div className="text-xs text-gray-400 truncate mt-0.5">{r.description}</div>}
-                {r.notes && !isExp && <div className="text-xs text-blue-500 truncate mt-0.5 italic">"{r.notes}"</div>}
+                {r.notes && !isExp && <div className="text-xs text-blue-500 truncate mt-0.5 italic">&quot;{r.notes}&quot;</div>}
               </div>
               <div className="w-[72px] flex items-center gap-0.5 justify-center pt-0.5 shrink-0">
                 <button onClick={() => onQty(r.id, Math.max(1, r.qty - 1))} className="w-6 h-6 rounded-full border text-xs font-bold text-gray-500 flex items-center justify-center">−</button>
@@ -1044,7 +1044,7 @@ export default function AddonPage() {
     );
   }
 
-  const wbTotal = wbRows.reduce((s, r) => s + rowTotal(r), 0);
+  const _wbTotal = wbRows.reduce((s, r) => s + rowTotal(r), 0); void _wbTotal;
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
