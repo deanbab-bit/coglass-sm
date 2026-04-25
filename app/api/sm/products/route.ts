@@ -25,7 +25,8 @@ export async function GET(req: Request) {
      ORDER BY c.sort_order, p.sort_order, p.name`,
     [session.tenantId]
   );
-  return NextResponse.json(rows);
+  const parsed = rows.map((r) => ({ ...r, sell_price: Number(r.sell_price), cost_price: Number(r.cost_price) }));
+  return NextResponse.json(parsed);
 }
 
 export async function POST(req: Request) {
