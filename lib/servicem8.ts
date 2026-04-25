@@ -127,7 +127,7 @@ function getJwtSecret() {
 }
 
 export function signSessionToken(tenantId: number, smAccountUuid: string): string {
-  return jwt.sign({ tenantId, smAccountUuid }, getJwtSecret(), { expiresIn: "8h" });
+  return jwt.sign({ tenantId, smAccountUuid }, getJwtSecret(), { expiresIn: "30d" });
 }
 
 export function verifySessionToken(token: string): { tenantId: number; smAccountUuid: string } {
