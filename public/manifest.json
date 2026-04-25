@@ -13,6 +13,7 @@
       "name": "Coglass",
       "type": "online",
       "entity": "job",
+      "iconURL": "https://sm-test.coglass.app/icon.svg",
       "iframe_url": "https://sm-test.coglass.app/addon",
       "location": "modal"
     }
