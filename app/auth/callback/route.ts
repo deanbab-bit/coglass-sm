@@ -22,9 +22,20 @@ export async function GET(req: Request) {
 
     // Exchange code for tokens
     const tokens = await exchangeCode(code);
+    console.log("OAuth tokens received — account_uuid:", tokens.account_uuid);
 
     // Get company info (account UUID + name)
-    const company = await getCompanyInfo(tokens.access_token);
+    // Fall back to token's account_uuid if companyconfig call fails
+    let company: { uuid: string; name: string };
+    try {
+      company = await getCompanyInfo(tokens.access_token);
+    } catch (e) {
+      console.warn("getCompanyInfo failed, falling back to token data:", e);
+      company = {
+        uuid: tokens.account_uuid ?? "unknown",
+        name: "Unknown",
+      };
+    }
 
     // Upsert tenant
     const expiresAt = tokens.expires_in
