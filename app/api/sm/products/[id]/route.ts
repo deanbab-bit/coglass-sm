@@ -24,8 +24,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     `UPDATE sm_products SET
        category_id=$1, name=$2, description=$3, thickness=$4, unit=$5,
        sell_price=$6, cost_price=$7, min_width_mm=$8, max_width_mm=$9,
-       min_height_mm=$10, max_height_mm=$11, active=$12, sort_order=$13
-     WHERE id=$14 AND tenant_id=$15 RETURNING *`,
+       min_height_mm=$10, max_height_mm=$11, active=$12, sort_order=$13,
+       min_m2=$14, pattern_name=$15
+     WHERE id=$16 AND tenant_id=$17 RETURNING *`,
     [
       body.categoryId ?? null,
       body.name,
@@ -40,6 +41,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       body.maxHeightMm ?? null,
       body.active !== false,
       Number(body.sortOrder ?? 0),
+      body.minM2 != null ? Number(body.minM2) : null,
+      body.patternName ?? null,
       id,
       session.tenantId,
     ]

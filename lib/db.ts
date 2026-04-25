@@ -30,9 +30,17 @@ export async function ensureSchema() {
       refresh_token TEXT,
       token_expires_at TIMESTAMPTZ,
       company_name TEXT,
+      supplier_name TEXT,
+      supplier_email TEXT,
+      supplier_phone TEXT,
+      vat_rate NUMERIC(5,4) DEFAULT 0.20,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+  await db.query(`ALTER TABLE sm_tenants ADD COLUMN IF NOT EXISTS supplier_name TEXT`);
+  await db.query(`ALTER TABLE sm_tenants ADD COLUMN IF NOT EXISTS supplier_email TEXT`);
+  await db.query(`ALTER TABLE sm_tenants ADD COLUMN IF NOT EXISTS supplier_phone TEXT`);
+  await db.query(`ALTER TABLE sm_tenants ADD COLUMN IF NOT EXISTS vat_rate NUMERIC(5,4) DEFAULT 0.20`);
 
   // Product categories
   await db.query(`
@@ -60,11 +68,16 @@ export async function ensureSchema() {
       max_width_mm INTEGER,
       min_height_mm INTEGER,
       max_height_mm INTEGER,
+      min_m2 NUMERIC(10,3),
+      pattern_name TEXT,
       active BOOLEAN DEFAULT TRUE,
       sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+  // Migrate: add new columns if they don't exist yet
+  await db.query(`ALTER TABLE sm_products ADD COLUMN IF NOT EXISTS min_m2 NUMERIC(10,3)`);
+  await db.query(`ALTER TABLE sm_products ADD COLUMN IF NOT EXISTS pattern_name TEXT`);
 
   // Operations (edges, Georgian bars, delivery etc.)
   await db.query(`

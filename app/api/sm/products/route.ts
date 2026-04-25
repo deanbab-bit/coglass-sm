@@ -25,7 +25,12 @@ export async function GET(req: Request) {
      ORDER BY c.sort_order, p.sort_order, p.name`,
     [session.tenantId]
   );
-  const parsed = rows.map((r) => ({ ...r, sell_price: Number(r.sell_price), cost_price: Number(r.cost_price) }));
+  const parsed = rows.map((r) => ({
+    ...r,
+    sell_price: Number(r.sell_price),
+    cost_price: Number(r.cost_price),
+    min_m2: r.min_m2 != null ? Number(r.min_m2) : null,
+  }));
   return NextResponse.json(parsed);
 }
 
@@ -39,8 +44,8 @@ export async function POST(req: Request) {
 
   const { rows } = await db.query(
     `INSERT INTO sm_products
-     (tenant_id, category_id, name, description, thickness, unit, sell_price, cost_price, min_width_mm, max_width_mm, min_height_mm, max_height_mm, active, sort_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+     (tenant_id, category_id, name, description, thickness, unit, sell_price, cost_price, min_width_mm, max_width_mm, min_height_mm, max_height_mm, min_m2, pattern_name, active, sort_order)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
     [
       session.tenantId,
       body.categoryId ?? null,
@@ -54,6 +59,8 @@ export async function POST(req: Request) {
       body.maxWidthMm ?? null,
       body.minHeightMm ?? null,
       body.maxHeightMm ?? null,
+      body.minM2 != null ? Number(body.minM2) : null,
+      body.patternName ?? null,
       body.active !== false,
       Number(body.sortOrder ?? 0),
     ]

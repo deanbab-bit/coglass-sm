@@ -25,6 +25,8 @@ interface Product {
   max_width_mm: number | null;
   min_height_mm: number | null;
   max_height_mm: number | null;
+  min_m2: number | null;
+  pattern_name: string | null;
   active: boolean;
   sort_order: number;
 }
@@ -42,7 +44,7 @@ interface Operation {
   sort_order: number;
 }
 
-type Tab = "products" | "operations" | "categories";
+type Tab = "products" | "operations" | "categories" | "settings";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -87,6 +89,8 @@ const BLANK_PRODUCT = {
   maxWidthMm: "",
   minHeightMm: "",
   maxHeightMm: "",
+  minM2: "",
+  patternName: "",
   active: true,
   sortOrder: "0",
 };
@@ -116,6 +120,8 @@ function ProductModal({
           maxWidthMm: product.max_width_mm?.toString() ?? "",
           minHeightMm: product.min_height_mm?.toString() ?? "",
           maxHeightMm: product.max_height_mm?.toString() ?? "",
+          minM2: product.min_m2?.toString() ?? "",
+          patternName: product.pattern_name ?? "",
           active: product.active,
           sortOrder: product.sort_order.toString(),
         }
@@ -265,6 +271,31 @@ function ProductModal({
                 onChange={(e) => set("maxHeightMm", e.target.value)}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Max height"
+              />
+            </div>
+          </div>
+
+          {/* Min m² + Pattern */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Min m² charge</label>
+              <input
+                type="number"
+                step="0.001"
+                min="0"
+                value={form.minM2}
+                onChange={(e) => set("minM2", e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. 0.5"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Pattern name</label>
+              <input
+                value={form.patternName}
+                onChange={(e) => set("patternName", e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. Obscure No.4"
               />
             </div>
           </div>
@@ -626,6 +657,16 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Account / supplier settings
+  const [accountForm, setAccountForm] = useState({
+    supplierName: "",
+    supplierEmail: "",
+    supplierPhone: "",
+    vatRate: "0.20",
+  });
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountSaved, setAccountSaved] = useState(false);
+
   // Modals
   const [productModal, setProductModal] = useState<{ open: boolean; item: Product | null }>({ open: false, item: null });
   const [opModal, setOpModal] = useState<{ open: boolean; item: Operation | null }>({ open: false, item: null });
@@ -655,14 +696,23 @@ export default function SetupPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [p, o, c] = await Promise.all([
+      const [p, o, c, acc] = await Promise.all([
         apiFetch("/api/sm/products").then((r) => r.json()),
         apiFetch("/api/sm/operations").then((r) => r.json()),
         apiFetch("/api/sm/categories").then((r) => r.json()),
+        apiFetch("/api/sm/account").then((r) => r.json()),
       ]);
       setProducts(Array.isArray(p) ? p : []);
       setOperations(Array.isArray(o) ? o : []);
       setCategories(Array.isArray(c) ? c : []);
+      if (acc && !acc.error) {
+        setAccountForm({
+          supplierName: acc.supplier_name ?? "",
+          supplierEmail: acc.supplier_email ?? "",
+          supplierPhone: acc.supplier_phone ?? "",
+          vatRate: acc.vat_rate != null ? String(acc.vat_rate) : "0.20",
+        });
+      }
       setError(null);
     } catch {
       setError("Failed to load data");
@@ -670,6 +720,23 @@ export default function SetupPage() {
       setLoading(false);
     }
   }, [token, apiFetch]);
+
+  async function saveAccount() {
+    setAccountLoading(true);
+    setAccountSaved(false);
+    await apiFetch("/api/sm/account", {
+      method: "PUT",
+      body: JSON.stringify({
+        supplierName: accountForm.supplierName || null,
+        supplierEmail: accountForm.supplierEmail || null,
+        supplierPhone: accountForm.supplierPhone || null,
+        vatRate: Number(accountForm.vatRate),
+      }),
+    });
+    setAccountLoading(false);
+    setAccountSaved(true);
+    setTimeout(() => setAccountSaved(false), 2000);
+  }
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -687,6 +754,8 @@ export default function SetupPage() {
       maxWidthMm: form.maxWidthMm ? Number(form.maxWidthMm) : null,
       minHeightMm: form.minHeightMm ? Number(form.minHeightMm) : null,
       maxHeightMm: form.maxHeightMm ? Number(form.maxHeightMm) : null,
+      minM2: form.minM2 ? Number(form.minM2) : null,
+      patternName: form.patternName || null,
       active: form.active,
       sortOrder: Number(form.sortOrder),
     });
@@ -767,6 +836,15 @@ export default function SetupPage() {
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+        <button
+          onClick={() => { window.location.href = "/addon"; }}
+          className="text-gray-400 hover:text-gray-600 p-1 -ml-1 rounded-lg hover:bg-gray-50 transition-colors"
+          title="Back to Workbench"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
         <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
           <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white">
             <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.9" />
@@ -783,7 +861,7 @@ export default function SetupPage() {
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-100 px-4 flex gap-1">
-        {(["products", "operations", "categories"] as Tab[]).map((t) => (
+        {(["products", "operations", "categories", "settings"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setSearch(""); }}
@@ -798,26 +876,28 @@ export default function SetupPage() {
         ))}
       </div>
 
-      {/* Search + Add */}
-      <div className="px-4 py-3 flex gap-2">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search ${tab}…`}
-          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={() => {
-            if (tab === "products") setProductModal({ open: true, item: null });
-            else if (tab === "operations") setOpModal({ open: true, item: null });
-            else setCatModal({ open: true, item: null });
-          }}
-          className="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center gap-1.5"
-        >
-          <span className="text-base leading-none">+</span>
-          <span>Add</span>
-        </button>
-      </div>
+      {/* Search + Add — hidden on settings tab */}
+      {tab !== "settings" && (
+        <div className="px-4 py-3 flex gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${tab}…`}
+            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={() => {
+              if (tab === "products") setProductModal({ open: true, item: null });
+              else if (tab === "operations") setOpModal({ open: true, item: null });
+              else setCatModal({ open: true, item: null });
+            }}
+            className="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center gap-1.5"
+          >
+            <span className="text-base leading-none">+</span>
+            <span>Add</span>
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       <div className="px-4 pb-8">
@@ -846,7 +926,7 @@ export default function SetupPage() {
               setDeleteModal({ label: o.name, onConfirm: () => deleteOperation(o.id) })
             }
           />
-        ) : (
+        ) : tab === "categories" ? (
           <CategoryList
             categories={categories}
             onEdit={(c) => setCatModal({ open: true, item: c })}
@@ -854,6 +934,73 @@ export default function SetupPage() {
               setDeleteModal({ label: c.name, onConfirm: () => deleteCategory(c.id) })
             }
           />
+        ) : (
+          /* Settings tab */
+          <div className="max-w-lg space-y-5 pt-2">
+            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-gray-800">Supplier Details</h2>
+              <p className="text-xs text-gray-400 -mt-2">Used on Cut Sheets and emailed to suppliers.</p>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Supplier name</label>
+                <input
+                  value={accountForm.supplierName}
+                  onChange={(e) => setAccountForm((f) => ({ ...f, supplierName: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. Coglass Ltd"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Supplier email</label>
+                <input
+                  type="email"
+                  value={accountForm.supplierEmail}
+                  onChange={(e) => setAccountForm((f) => ({ ...f, supplierEmail: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="orders@yoursupplier.com"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Supplier phone</label>
+                <input
+                  type="tel"
+                  value={accountForm.supplierPhone}
+                  onChange={(e) => setAccountForm((f) => ({ ...f, supplierPhone: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 01234 567890"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-gray-800">Pricing</h2>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">VAT rate</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    value={accountForm.vatRate}
+                    onChange={(e) => setAccountForm((f) => ({ ...f, vatRate: e.target.value }))}
+                    className="w-32 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-500">
+                    = {(Number(accountForm.vatRate) * 100).toFixed(0)}% VAT
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Enter as decimal: 0.20 = 20%, 0.05 = 5%</p>
+              </div>
+            </div>
+
+            <button
+              onClick={saveAccount}
+              disabled={accountLoading}
+              className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {accountLoading ? "Saving…" : accountSaved ? "Saved!" : "Save Settings"}
+            </button>
+          </div>
         )}
       </div>
 
@@ -948,6 +1095,20 @@ function ProductList({
                       {" · "}
                       H: {p.min_height_mm ?? "—"}–{p.max_height_mm ?? "—"}mm
                     </p>
+                  )}
+                  {(p.min_m2 || p.pattern_name) && (
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {p.min_m2 && (
+                        <span className="text-[10px] font-medium bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">
+                          min {p.min_m2}m²
+                        </span>
+                      )}
+                      {p.pattern_name && (
+                        <span className="text-[10px] font-medium bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded">
+                          {p.pattern_name}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-1">

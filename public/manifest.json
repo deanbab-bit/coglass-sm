@@ -8,6 +8,15 @@
     "version": "1.0.0",
     "categories": ["Materials & Equipment"]
   },
+  "capabilities": {
+    "job_actions": [
+      {
+        "name": "Coglass",
+        "url": "https://sm-test.coglass.app/addon",
+        "icon": "https://sm-test.coglass.app/icon.png"
+      }
+    ]
+  },
   "actions": [
     {
       "name": "Coglass",
