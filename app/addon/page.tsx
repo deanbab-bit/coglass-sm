@@ -896,6 +896,8 @@ export default function AddonPage() {
   const [customQty, setCustomQty] = React.useState(1);
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
+  const [showOpPicker, setShowOpPicker] = React.useState(false);
+  const [opSearch, setOpSearch] = React.useState("");
 
   // Ask ServiceM8 parent frame to resize the modal
   React.useEffect(() => {
@@ -1128,14 +1130,14 @@ export default function AddonPage() {
 
       {/* Workbench tab */}
       {tab === "workbench" && (
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col relative">
           {/* Add bar */}
           <div className="flex items-center gap-1.5 px-3 py-2 border-b bg-white shrink-0 flex-wrap">
             <button onClick={() => setPanel({ type: "product-search" })}
               className="text-xs font-bold px-3 py-1.5 rounded-lg text-white flex items-center gap-1" style={{ background: BLUE }}>
               <span>+</span><span>Glass Product</span>
             </button>
-            <button onClick={() => setPanel({ type: "op-search" })}
+            <button onClick={() => { setShowOpPicker(true); setOpSearch(""); }}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border text-gray-600 bg-white flex items-center gap-1">
               <span>+</span><span>Operation</span>
             </button>
@@ -1150,6 +1152,73 @@ export default function AddonPage() {
               </button>
             )}
           </div>
+
+          {/* Inline operation picker overlay */}
+          {showOpPicker && (
+            <div className="absolute inset-0 z-20 flex flex-col" style={{ background: "rgba(0,0,0,0.25)" }}
+              onClick={() => setShowOpPicker(false)}>
+              <div className="mt-auto bg-white rounded-t-2xl shadow-xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                  <div className="text-sm font-semibold text-gray-800 flex-1">Add Operation</div>
+                  <button onClick={() => setShowOpPicker(false)} className="text-gray-400 text-xl leading-none">×</button>
+                </div>
+                <div className="px-3 pb-2">
+                  <input
+                    autoFocus
+                    value={opSearch}
+                    onChange={e => setOpSearch(e.target.value)}
+                    placeholder="Search operations…"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                    style={{ focusRingColor: BLUE } as React.CSSProperties}
+                  />
+                </div>
+                {/* Georgian Bars entry */}
+                <button
+                  onClick={() => { setShowOpPicker(false); setPanel({ type: "georgian" }); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 border-t hover:bg-gray-50 text-left">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{ background: `${BLUE}18`, color: BLUE }}>⊞</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-900">Georgian Bars</div>
+                    <div className="text-xs text-gray-400">Configure bar grid for glass panes</div>
+                  </div>
+                </button>
+                {/* Operations list */}
+                <div className="overflow-y-auto max-h-56 border-t divide-y divide-gray-50">
+                  {operations
+                    .filter(o => o.active !== false && (!opSearch || o.name.toLowerCase().includes(opSearch.toLowerCase()) || (o.category_name ?? "").toLowerCase().includes(opSearch.toLowerCase())))
+                    .map(o => (
+                      <button key={o.id}
+                        onClick={() => {
+                          addRow({
+                            id: Math.random().toString(36).slice(2),
+                            rowType: "operation",
+                            name: o.name,
+                            description: o.description ?? "",
+                            qty: 1,
+                            unit: o.unit,
+                            unit_price: o.sell_price,
+                          });
+                          setShowOpPicker(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-left">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900">{o.name}</div>
+                          {o.description && <div className="text-xs text-gray-400 truncate">{o.description}</div>}
+                        </div>
+                        <div className="text-xs font-semibold shrink-0" style={{ color: BLUE }}>
+                          £{o.sell_price.toFixed(2)}/{o.unit === "linear_m" ? "lin.m" : o.unit}
+                        </div>
+                      </button>
+                    ))}
+                  {operations.filter(o => o.active !== false && (!opSearch || o.name.toLowerCase().includes(opSearch.toLowerCase()))).length === 0 && (
+                    <div className="py-6 text-center text-sm text-gray-400">No operations found</div>
+                  )}
+                </div>
+                <div className="h-safe-area-inset-bottom pb-4" />
+              </div>
+            </div>
+          )}
 
           {/* Table */}
           {loading ? (
