@@ -897,6 +897,20 @@ export default function AddonPage() {
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
 
+  // Ask ServiceM8 parent frame to resize the modal
+  React.useEffect(() => {
+    const resize = () => {
+      const msg = { smAddOn: true, action: "resize", width: 860, height: 820 };
+      window.parent.postMessage(JSON.stringify(msg), "*");
+      window.parent.postMessage(msg, "*");
+    };
+    resize();
+    // Retry a few times as SM may not be ready immediately
+    const t1 = setTimeout(resize, 500);
+    const t2 = setTimeout(resize, 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   // Load session from URL params + sessionStorage
   React.useEffect(() => {
     const p = new URLSearchParams(window.location.search);
